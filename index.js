@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const port = 3000;
@@ -9,22 +10,19 @@ const mockDatabase = [
     { id: 3, name: 'Jim Beam' }
 ];
 
-app.get('/',(req,res)=>{
-    res.send('wellcome')
-})
-// Endpoint with inefficient loop
-app.get('/users', (req, res) => {
-    let results = [];
-    for (let i = 0; i < mockDatabase.length; i++) {
-        results.push(mockDatabase[i]);
-    }
-    res.json(results);
+app.get('/', (req, res) => {
+    res.send('Welcome');
 });
 
-// Vulnerable input handling (unsanitized query parameter)
+// Efficiently return users
+app.get('/users', (req, res) => {
+    res.json(mockDatabase);
+});
+
+// Vulnerable input handling (sanitized)
 app.get('/user/:id', (req, res) => {
-    const userId = req.params.id; // Unsanitized input
-    const user = mockDatabase.find(user => user.id == userId);
+    const userId = parseInt(req.params.id, 10); // Safely parse the user ID
+    const user = mockDatabase.find(user => user.id === userId);
 
     if (user) {
         res.json(user);
@@ -33,8 +31,8 @@ app.get('/user/:id', (req, res) => {
     }
 });
 
-// Hardcoded sensitive data
-const hardcodedPassword = 'mySuperSecretPassword123';
+// Use environment variable for sensitive data
+const hardcodedPassword = process.env.PASSWORD;
 
 app.listen(port, () => {
     console.log(`App running at http://localhost:${port}`);
